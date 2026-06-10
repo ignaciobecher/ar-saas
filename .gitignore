@@ -1,0 +1,6 @@
+node_modules/
+dist/
+templates/backend/
+templates/frontend/
+*.tgz
+.env

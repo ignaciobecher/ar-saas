@@ -1,0 +1,8 @@
+src/
+scripts/
+*.ts
+tsconfig*.json
+node_modules/
+.env
+.gitignore
+*.tgz

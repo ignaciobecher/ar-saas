@@ -1,0 +1,46 @@
+{
+  "name": "create-saas-ar",
+  "version": "0.1.0",
+  "description": "Generador de proyectos SaaS multi-tenant para startups argentinas",
+  "main": "dist/index.js",
+  "bin": {
+    "create-saas-ar": "dist/index.js"
+  },
+  "files": [
+    "dist/",
+    "templates/"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "sync-templates": "tsx scripts/sync-templates.ts",
+    "prepublishOnly": "npm run sync-templates && npm run build"
+  },
+  "keywords": [
+    "saas",
+    "nestjs",
+    "nextjs",
+    "argentina",
+    "cli",
+    "generator",
+    "multi-tenant"
+  ],
+  "author": "ignacio.becher@gmail.com",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "chalk": "4.1.2",
+    "fs-extra": "^11.2.0",
+    "inquirer": "8.2.6",
+    "ora": "5.4.1"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.0",
+    "@types/inquirer": "^8.2.12",
+    "@types/node": "^20.0.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.4.0"
+  }
+}
