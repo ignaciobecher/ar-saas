@@ -6,7 +6,7 @@
 
 <p align="center">
   <strong>Generador de proyectos SaaS multi-tenant para startups argentinas</strong><br/>
-  Backend NestJS + Frontend Next.js listos para producción en minutos.
+  Backend NestJS + Frontend Next.js completo — landing, auth, dashboard y legal listos para producción.
 </p>
 
 <p align="center">
@@ -23,7 +23,7 @@
 npx ar-saas mi-proyecto
 ```
 
-Respondés 4 preguntas y en minutos tenés un proyecto completo corriendo localmente.
+Respondés algunas preguntas y en minutos tenés un proyecto completo corriendo localmente.
 
 ---
 
@@ -31,27 +31,83 @@ Respondés 4 preguntas y en minutos tenés un proyecto completo corriendo localm
 
 ```
 mi-proyecto/
-├── backend/                    # NestJS 11 + MongoDB
+├── backend/                          # NestJS 11 + MongoDB
 │   ├── src/
 │   │   ├── modules/
-│   │   │   ├── auth/           # Auth completo (JWT en cookies HttpOnly)
-│   │   │   ├── users/          # Usuarios con roles
-│   │   │   ├── workspaces/     # Multi-tenancy por workspace
-│   │   │   └── mail/           # Emails transaccionales con Resend
-│   │   └── common/             # Guards, filtros, decoradores, base repository
-│   ├── .env.example
+│   │   │   ├── auth/                 # Auth completo (JWT + GitHub OAuth en cookies HttpOnly)
+│   │   │   ├── users/                # Usuarios con roles
+│   │   │   ├── workspaces/           # Multi-tenancy por workspace
+│   │   │   └── mail/                 # Emails transaccionales con Resend
+│   │   └── common/                   # Guards, filtros, decoradores, base repository
+│   ├── .env                          # Copiado de .env.example automáticamente
 │   └── package.json
-├── frontend/                   # Next.js 15 + Tailwind CSS 4 + shadcn/ui
+│
+├── frontend/                         # Next.js 15 + Tailwind CSS 4 + shadcn/ui
 │   ├── src/
+│   │   ├── config/
+│   │   │   └── site.ts               # ← Personalización central del SaaS
 │   │   ├── app/
-│   │   │   ├── (auth)/         # Login, register, verify email, reset password
-│   │   │   ├── (dashboard)/    # Rutas protegidas con layout
-│   │   │   └── setup/          # Pantalla de onboarding al abrir por primera vez
-│   │   ├── providers/          # AuthProvider con estado global
-│   │   └── lib/api/            # Cliente axios con refresh automático
+│   │   │   ├── page.tsx              # Landing page completa
+│   │   │   ├── (auth)/               # Login, register (+términos), verify, reset
+│   │   │   ├── (dashboard)/          # Rutas protegidas
+│   │   │   │   ├── dashboard/        # Overview con stat cards
+│   │   │   │   ├── profile/          # Perfil de usuario + cambio de contraseña
+│   │   │   │   ├── settings/         # Notificaciones, workspace, zona peligrosa
+│   │   │   │   ├── billing/          # Plan actual, historial, upgrade
+│   │   │   │   └── team/             # Miembros + invitaciones
+│   │   │   ├── (legal)/
+│   │   │   │   ├── terms/            # Términos y condiciones
+│   │   │   │   └── privacy/          # Política de privacidad
+│   │   │   └── setup/                # Onboarding inicial
+│   │   ├── components/
+│   │   │   ├── landing/              # Navbar, Hero, Features, Pricing, FAQ, Footer
+│   │   │   ├── dashboard/            # Sidebar, Header, StatCard
+│   │   │   └── ui/                   # 15+ componentes shadcn/ui
+│   │   ├── providers/                # AuthProvider con estado global
+│   │   └── lib/api/                  # Cliente axios con refresh automático
+│   ├── .env.local                    # Copiado de .env.local.example automáticamente
 │   └── package.json
+│
 └── railway.toml / fly.toml / docker-compose.yml
 ```
+
+---
+
+## Personalización
+
+Al generar el proyecto, el CLI pregunta el nombre, tagline, descripción y email de soporte del SaaS. Esos valores se inyectan automáticamente en un único archivo:
+
+```
+frontend/src/config/site.ts
+```
+
+Ese archivo es la **fuente de verdad** para todo el contenido de la app:
+
+```ts
+export const siteConfig = {
+  name: 'Mi SaaS',
+  tagline: 'La plataforma que tu equipo necesita',
+  description: 'Automatizá tu negocio...',
+  supportEmail: 'hola@mi-saas.com',
+
+  // Navegación de la landing
+  nav: { links: [...] },
+
+  // Secciones de la landing
+  hero: { headline, description, cta, ctaSecondary },
+  features: [...],     // Íconos, títulos y descripciones
+  pricing: [...],      // 3 tiers con features, precios y CTAs
+  faq: [...],          // Preguntas y respuestas
+
+  // Footer
+  footer: { columns, social, copyright },
+
+  // Usado en /terms y /privacy
+  legal: { companyName, email, lastUpdated },
+}
+```
+
+Editás ese archivo una sola vez y toda la app (landing, footer, páginas legales) queda actualizada.
 
 ---
 
@@ -63,6 +119,7 @@ mi-proyecto/
 | NestJS | 11 | Framework principal |
 | MongoDB + Mongoose | 9 | Base de datos |
 | JWT (passport) | — | Autenticación en cookies HttpOnly |
+| passport-github2 | — | OAuth con GitHub |
 | Resend | — | Emails transaccionales |
 | Swagger | — | Documentación automática en `/api/docs` |
 
@@ -71,31 +128,44 @@ mi-proyecto/
 |---|---|---|
 | Next.js | 15 | App Router, Server Components |
 | Tailwind CSS | 4 | Estilos |
-| shadcn/ui | — | Componentes UI |
-| react-hook-form | — | Formularios |
+| shadcn/ui + Radix UI | — | 15+ componentes listos (button, dialog, dropdown, tabs, accordion, avatar, switch, etc.) |
+| react-hook-form | — | Formularios con validación |
 | axios | — | HTTP client con interceptor de refresh |
+| lucide-react | — | Íconos |
 
 ---
 
 ## Módulos incluidos
 
-### Free (siempre incluidos)
+### Frontend — siempre incluido
+
+| Sección | Contenido |
+|---|---|
+| **Landing page** | Navbar sticky, Hero con mockup, Features (6 cards), Pricing (3 tiers), FAQ (acordeón), CTA final, Footer |
+| **Auth** | Login, Register (con checkbox de términos), Verify email, Forgot password, Reset password |
+| **Dashboard** | Overview con stat cards, sidebar con navegación activa, header con avatar + dropdown |
+| **Perfil** | Editar nombre/email, cambiar contraseña (modal), zona de eliminación de cuenta |
+| **Ajustes** | Switches de notificaciones por email, configuración de workspace, zona peligrosa |
+| **Facturación** | Plan actual, método de pago, historial de facturas, botón de upgrade |
+| **Equipo** | Lista de miembros, invitar por email (modal), gestión de roles |
+| **Legal** | Términos y condiciones, Política de privacidad — ambas enlazadas desde el footer y el register |
+
+### Backend — siempre incluido
 
 | Módulo | Descripción |
 |---|---|
 | **Auth completo** | Registro, login, verificación de email, reset de password |
+| **GitHub OAuth** | Login/registro con GitHub (código de intercambio + cookies HttpOnly) |
 | **Multi-tenancy** | Aislamiento estricto por `workspaceId` en todas las queries |
 | **Mail transaccional** | Verificación, bienvenida y reset con Resend. Fail-open si Resend falla |
 
-### Opcionales
+### Módulos opcionales
 
 | Módulo | Descripción |
 |---|---|
-| **OAuth + 2FA** | Login con GitHub/Google + autenticación de dos factores TOTP |
 | **Notificaciones** | Notificaciones in-app + Push Web (VAPID) |
 | **Invoices + Quotes** | Facturación con generación de PDF |
 | **CRM** | Kanban + Pipeline de ventas |
-| **MercadoPago** | Suscripciones recurrentes con webhooks |
 
 ---
 
@@ -114,6 +184,10 @@ Al ejecutar el CLI se copian automáticamente los archivos `.env.example` → `.
 | `RESEND_FROM_EMAIL` | Email remitente verificado en Resend |
 | `APP_URL` | URL del frontend (para links en emails) |
 | `CORS_ORIGINS` | URL del frontend separada por comas |
+| `FRONTEND_URL` | URL del frontend para redirecciones OAuth |
+| `GITHUB_CLIENT_ID` | Client ID de tu GitHub OAuth App |
+| `GITHUB_CLIENT_SECRET` | Client Secret de tu GitHub OAuth App |
+| `GITHUB_CALLBACK_URL` | Callback URL registrada en GitHub |
 
 ### Frontend — variables requeridas
 
@@ -168,10 +242,12 @@ npm run start:dev
 cd mi-proyecto/frontend
 npm install
 npm run dev
-# → http://localhost:3001
+# → http://localhost:3001 (landing page)
+# → http://localhost:3001/login
+# → http://localhost:3001/dashboard
 ```
 
-La primera vez que abrís el frontend aparece una pantalla de onboarding que guía la configuración completa.
+La landing page aparece directo en `/`. El primer setup del backend se hace desde la pantalla de onboarding.
 
 ---
 
@@ -185,6 +261,9 @@ La primera vez que abrís el frontend aparece una pantalla de onboarding que gu�
 - `POST /api/auth/forgot-password` — Solicitud de reset
 - `POST /api/auth/reset-password` — Reset de contraseña
 - `GET  /api/auth/me` — Datos del usuario autenticado
+- `GET  /api/auth/github` — Inicia el flujo OAuth con GitHub
+- `GET  /api/auth/github/callback` — Callback de GitHub
+- `POST /api/auth/github/exchange` — Canjea el código por cookies de sesión
 
 Los tokens JWT viajan **únicamente en cookies HttpOnly**. Nunca en `localStorage` ni en el body de las respuestas.
 
@@ -226,7 +305,7 @@ El código generado incluye dependencias de terceros (NestJS, Next.js, MongoDB, 
 
 **Seguridad**
 
-Si encontrás una vulnerabilidad de seguridad en esta herramienta, por favor reportala abriendo un issue en el [repositorio de GitHub](https://github.com/ignaciobecher/ar-saas) en lugar de hacerlo público. Intentaremos resolverlo a la brevedad.
+Si encontrás una vulnerabilidad de seguridad en esta herramienta, por favor reportala abriendo un issue en el [repositorio de GitHub](https://github.com/ignaciobecher/ar-saas) en lugar de hacerlo público.
 
 ---
 

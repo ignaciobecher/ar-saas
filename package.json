@@ -1,7 +1,7 @@
 {
   "name": "ar-saas",
-  "version": "0.2.1",
-  "description": "Generador de proyectos SaaS multi-tenant para startups argentinas",
+  "version": "0.3.0",
+  "description": "Generador de proyectos SaaS multi-tenant para startups argentinas. Landing page, auth, dashboard y legal listos para producción.",
   "main": "dist/index.js",
   "bin": {
     "ar-saas": "dist/index.js"
@@ -23,7 +23,11 @@
     "argentina",
     "cli",
     "generator",
-    "multi-tenant"
+    "multi-tenant",
+    "landing-page",
+    "dashboard",
+    "boilerplate",
+    "starter"
   ],
   "author": "ignacio.becher@gmail.com",
   "license": "MIT",

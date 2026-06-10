@@ -71,6 +71,9 @@ export async function generate(config: ProjectConfig): Promise<void> {
   setupEnvFiles(projectDir, config)
 
   spinner.succeed(chalk.green(`Proyecto ${chalk.bold(config.projectName)} creado`))
+  console.log()
+  console.log(chalk.cyan(`  Sitio: ${chalk.bold(config.siteTitle)}`))
+  console.log(chalk.gray(`  "${config.siteTagline}"`))
   printNextSteps(config)
 }
 
@@ -78,7 +81,7 @@ function processDir(dir: string, config: ProjectConfig): void {
   for (const file of collectTextFiles(dir)) {
     try {
       let content = fs.readFileSync(file, 'utf-8')
-      content = applyNameReplacements(content, config.projectName)
+      content = applyNameReplacements(content, config)
       fs.writeFileSync(file, content, 'utf-8')
     } catch {
       // skip unreadable or binary files
@@ -107,11 +110,16 @@ function collectTextFiles(dir: string): string[] {
   return result
 }
 
-function applyNameReplacements(content: string, projectName: string): string {
+function applyNameReplacements(content: string, config: ProjectConfig): string {
+  const { projectName, siteTitle, siteTagline, siteDescription, supportEmail } = config
   return content
     .replace(/ar-saas-backend/g, `${projectName}-backend`)
     .replace(/ar-saas-frontend/g, `${projectName}-frontend`)
     .replace(/ar-saas/g, projectName)
+    .replace(/__SITE_NAME__/g, siteTitle)
+    .replace(/__SITE_TAGLINE__/g, siteTagline)
+    .replace(/__SITE_DESCRIPTION__/g, siteDescription)
+    .replace(/__SUPPORT_EMAIL__/g, supportEmail)
 }
 
 function generateDeployConfig(projectDir: string, config: ProjectConfig): void {
@@ -261,6 +269,7 @@ function printNextSteps(config: ProjectConfig): void {
     console.log()
     console.log(chalk.cyan(`  cd ${config.projectName}/frontend`))
     console.log(chalk.gray('  # Completar .env.local con la URL del backend'))
+    console.log(chalk.gray('  # Personalizar contenido en src/config/site.ts'))
     console.log(chalk.cyan('  npm install'))
     console.log(chalk.cyan('  npm run dev'))
   }

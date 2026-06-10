@@ -3,6 +3,10 @@ import chalk from 'chalk'
 
 export interface ProjectConfig {
   projectName: string
+  siteTitle: string
+  siteTagline: string
+  siteDescription: string
+  supportEmail: string
   stack: 'backend-frontend' | 'backend' | 'frontend'
   modules: string[]
   deployTarget: 'railway' | 'flyio' | 'docker' | 'later'
@@ -16,7 +20,7 @@ export async function runCli(defaultName?: string): Promise<ProjectConfig> {
     {
       type: 'input',
       name: 'projectName',
-      message: 'Nombre del proyecto:',
+      message: 'Nombre del proyecto (slug):',
       default: defaultName ?? 'my-saas',
       validate: (input: string) => {
         if (!/^[a-z0-9][a-z0-9-]{1,}$/.test(input)) {
@@ -24,6 +28,43 @@ export async function runCli(defaultName?: string): Promise<ProjectConfig> {
         }
         return true
       },
+    },
+    {
+      type: 'input',
+      name: 'siteTitle',
+      message: 'Nombre del SaaS (cómo se muestra a los usuarios):',
+      default: (answers: Partial<ProjectConfig>) =>
+        answers.projectName
+          ? answers.projectName
+              .split('-')
+              .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1))
+              .join(' ')
+          : 'Mi SaaS',
+      validate: (input: string) =>
+        input.trim().length >= 2 || 'El nombre debe tener al menos 2 caracteres',
+    },
+    {
+      type: 'input',
+      name: 'siteTagline',
+      message: 'Tagline (frase corta que describe el producto):',
+      default: 'La plataforma que tu equipo necesita',
+      validate: (input: string) =>
+        input.trim().length >= 5 || 'El tagline debe tener al menos 5 caracteres',
+    },
+    {
+      type: 'input',
+      name: 'siteDescription',
+      message: 'Descripción (una o dos oraciones para la landing):',
+      default: 'Automatizá tu negocio, escalá tu equipo y enfocate en lo que importa. Todo desde una sola plataforma.',
+    },
+    {
+      type: 'input',
+      name: 'supportEmail',
+      message: 'Email de soporte / contacto:',
+      default: (answers: Partial<ProjectConfig>) =>
+        `hola@${answers.projectName ?? 'mi-saas'}.com`,
+      validate: (input: string) =>
+        /\S+@\S+\.\S+/.test(input) || 'Ingresá un email válido',
     },
     {
       type: 'list',
