@@ -18,7 +18,7 @@ interface RawAnswers {
 }
 
 export async function runCli(): Promise<ProjectConfig> {
-  console.log(chalk.bold('\n  create-saas-ar'))
+  console.log(chalk.bold('\n  ar-saas'))
   console.log(chalk.gray('  Backend NestJS + Frontend Next.js listos para producción\n'))
 
   const answers = await inquirer.prompt<RawAnswers>([

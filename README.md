@@ -1,64 +1,206 @@
-# create-saas-ar
+# ar-saas
 
-Generador de proyectos SaaS multi-tenant para startups argentinas.
+<p align="center">
+  <strong>Generador de proyectos SaaS multi-tenant para startups argentinas</strong><br/>
+  Backend NestJS + Frontend Next.js listos para producción en minutos.
+</p>
+
+<p align="center">
+  <a href="https://www.npmjs.com/package/ar-saas"><img src="https://img.shields.io/npm/v/ar-saas.svg" alt="npm version" /></a>
+  <a href="https://www.npmjs.com/package/ar-saas"><img src="https://img.shields.io/npm/dm/ar-saas.svg" alt="npm downloads" /></a>
+  <a href="https://github.com/ignaciobecher/ar-saas/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="license" /></a>
+  <img src="https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen" alt="node version" />
+</p>
+
+---
 
 ## Quickstart
 
 ```bash
-npx create-saas-ar mi-proyecto
+npx ar-saas mi-proyecto
 ```
 
-Seguí el asistente interactivo y en minutos tenés un proyecto listo para correr.
+Respondés 4 preguntas y en minutos tenés un proyecto completo corriendo localmente.
 
-## Qué genera
+---
 
-**Backend** — NestJS 11 + MongoDB + JWT en cookies HttpOnly + multi-tenancy por workspace + mail con Resend + Swagger automático.
+## ¿Qué genera?
 
-**Frontend** — Next.js 15 + Tailwind CSS 4 + shadcn/ui + auth completo + refresh automático de tokens.
+```
+mi-proyecto/
+├── backend/                    # NestJS 11 + MongoDB
+│   ├── src/
+│   │   ├── modules/
+│   │   │   ├── auth/           # Auth completo (JWT en cookies HttpOnly)
+│   │   │   ├── users/          # Usuarios con roles
+│   │   │   ├── workspaces/     # Multi-tenancy por workspace
+│   │   │   └── mail/           # Emails transaccionales con Resend
+│   │   └── common/             # Guards, filtros, decoradores, base repository
+│   ├── .env.example
+│   └── package.json
+├── frontend/                   # Next.js 15 + Tailwind CSS 4 + shadcn/ui
+│   ├── src/
+│   │   ├── app/
+│   │   │   ├── (auth)/         # Login, register, verify email, reset password
+│   │   │   ├── (dashboard)/    # Rutas protegidas con layout
+│   │   │   └── setup/          # Pantalla de onboarding al abrir por primera vez
+│   │   ├── providers/          # AuthProvider con estado global
+│   │   └── lib/api/            # Cliente axios con refresh automático
+│   └── package.json
+└── railway.toml / fly.toml / docker-compose.yml
+```
 
-## Módulos incluidos (free)
+---
 
-- Auth completo: registro, login, verificación de email, reset de password
-- Multi-tenancy con aislamiento estricto por `workspaceId`
-- Mail transaccional con Resend (verificación, bienvenida, reset)
+## Stack
 
-## Módulos PRO
+### Backend
+| Tecnología | Versión | Uso |
+|---|---|---|
+| NestJS | 11 | Framework principal |
+| MongoDB + Mongoose | 9 | Base de datos |
+| JWT (passport) | — | Autenticación en cookies HttpOnly |
+| Resend | — | Emails transaccionales |
+| Swagger | — | Documentación automática en `/api/docs` |
+
+### Frontend
+| Tecnología | Versión | Uso |
+|---|---|---|
+| Next.js | 15 | App Router, Server Components |
+| Tailwind CSS | 4 | Estilos |
+| shadcn/ui | — | Componentes UI |
+| react-hook-form | — | Formularios |
+| axios | — | HTTP client con interceptor de refresh |
+
+---
+
+## Módulos incluidos
+
+### Free (siempre incluidos)
 
 | Módulo | Descripción |
 |---|---|
-| Auth avanzado | OAuth GitHub/Google + 2FA TOTP (Google Authenticator) |
-| Notificaciones | Notificaciones in-app + Push Web (VAPID) |
-| Invoices + Quotes | Facturación con generación de PDF |
-| CRM | Kanban + Pipeline de ventas |
-| MercadoPago | Suscripciones recurrentes con webhooks |
+| **Auth completo** | Registro, login, verificación de email, reset de password |
+| **Multi-tenancy** | Aislamiento estricto por `workspaceId` en todas las queries |
+| **Mail transaccional** | Verificación, bienvenida y reset con Resend. Fail-open si Resend falla |
 
-[Conseguir licencia PRO →](https://create-saas-ar.dev)
+### Opcionales
 
-## Opciones de deploy
+| Módulo | Descripción |
+|---|---|
+| **OAuth + 2FA** | Login con GitHub/Google + autenticación de dos factores TOTP |
+| **Notificaciones** | Notificaciones in-app + Push Web (VAPID) |
+| **Invoices + Quotes** | Facturación con generación de PDF |
+| **CRM** | Kanban + Pipeline de ventas |
+| **MercadoPago** | Suscripciones recurrentes con webhooks |
 
-El CLI genera la configuración para:
+---
 
-- **Railway** — `railway.toml` listo para usar
-- **Fly.io** — `fly.toml` con región `gru` (São Paulo)
-- **Docker** — `docker-compose.yml` con MongoDB incluido
+## Configuración
+
+Al ejecutar el CLI se copian automáticamente los archivos `.env.example` → `.env`.
+
+### Backend — variables requeridas
+
+| Variable | Descripción |
+|---|---|
+| `MONGODB_URI` | URI de conexión a MongoDB |
+| `JWT_ACCESS_SECRET` | Secreto para access tokens (`openssl rand -hex 64`) |
+| `JWT_REFRESH_SECRET` | Secreto para refresh tokens (distinto al anterior) |
+| `RESEND_API_KEY` | API Key de [Resend](https://resend.com) |
+| `RESEND_FROM_EMAIL` | Email remitente verificado en Resend |
+| `APP_URL` | URL del frontend (para links en emails) |
+| `CORS_ORIGINS` | URL del frontend separada por comas |
+
+### Frontend — variables requeridas
+
+| Variable | Descripción |
+|---|---|
+| `NEXT_PUBLIC_API_URL` | URL base del backend (ej: `http://localhost:3000`) |
+
+---
+
+## Deploy
+
+El CLI genera la configuración según el entorno elegido:
+
+### Railway
+```toml
+# railway.toml generado automáticamente
+[build]
+builder = "nixpacks"
+
+[deploy]
+startCommand = "npm run start:prod"
+healthcheckPath = "/api/health"
+```
+
+### Fly.io
+```toml
+# fly.toml generado automáticamente
+app = "mi-proyecto"
+primary_region = "gru"  # São Paulo
+```
+
+### Docker
+```yaml
+# docker-compose.yml generado automáticamente
+# Incluye backend + frontend + MongoDB
+docker compose up
+```
+
+---
+
+## Iniciar el proyecto generado
+
+```bash
+# Backend
+cd mi-proyecto/backend
+npm install
+npm run start:dev
+# → http://localhost:3000
+# → Swagger: http://localhost:3000/api/docs
+
+# Frontend (en otra terminal)
+cd mi-proyecto/frontend
+npm install
+npm run dev
+# → http://localhost:3001
+```
+
+La primera vez que abrís el frontend aparece una pantalla de onboarding que guía la configuración completa.
+
+---
+
+## Flujos de autenticación implementados
+
+- `POST /api/auth/register` — Registro con email de verificación
+- `GET  /api/auth/verify-email?token=` — Verificación de email
+- `POST /api/auth/login` — Login (setea cookies HttpOnly)
+- `POST /api/auth/refresh` — Refresh automático del access token
+- `POST /api/auth/logout` — Logout (limpia cookies)
+- `POST /api/auth/forgot-password` — Solicitud de reset
+- `POST /api/auth/reset-password` — Reset de contraseña
+- `GET  /api/auth/me` — Datos del usuario autenticado
+
+Los tokens JWT viajan **únicamente en cookies HttpOnly**. Nunca en `localStorage` ni en el body de las respuestas.
+
+---
 
 ## Requisitos
 
-- Node.js 18+
-- MongoDB (o usar el Docker Compose incluido)
-- Cuenta en [Resend](https://resend.com) para emails
+- **Node.js** 18+
+- **MongoDB** local o [Atlas](https://www.mongodb.com/atlas) (free tier disponible)
+- Cuenta en [Resend](https://resend.com) para emails (free tier: 100 emails/día)
 
-## Variables de entorno
-
-El CLI copia `.env.example` → `.env` automáticamente. Completar al menos:
-
-```
-MONGODB_URI=
-JWT_ACCESS_SECRET=
-JWT_REFRESH_SECRET=
-RESEND_API_KEY=
-```
+---
 
 ## Licencia
 
-MIT — el código generado es tuyo, sin restricciones.
+MIT — el código generado es completamente tuyo, sin restricciones de uso comercial.
+
+---
+
+<p align="center">
+  Hecho en Argentina 🇦🇷
+</p>

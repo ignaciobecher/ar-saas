@@ -2,7 +2,7 @@ import fs from 'fs'
 import path from 'path'
 import os from 'os'
 
-const CACHE_DIR = path.join(os.homedir(), '.create-saas-ar')
+const CACHE_DIR = path.join(os.homedir(), '.ar-saas')
 const CACHE_FILE = path.join(CACHE_DIR, 'license')
 const LICENSE_API = 'https://api.create-saas-ar.dev/licenses/validate'
 const LICENSE_REGEX = /^CSAR-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/

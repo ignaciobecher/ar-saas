@@ -1,10 +1,10 @@
 {
-  "name": "create-saas-ar",
+  "name": "ar-saas",
   "version": "0.1.0",
   "description": "Generador de proyectos SaaS multi-tenant para startups argentinas",
   "main": "dist/index.js",
   "bin": {
-    "create-saas-ar": "dist/index.js"
+    "ar-saas": "dist/index.js"
   },
   "files": [
     "dist/",

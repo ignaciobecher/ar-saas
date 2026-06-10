@@ -125,7 +125,7 @@ function applyProModuleHandling(content: string, hasValidPro: boolean): string {
   // Add explanatory placeholder for PRO lines
   return content.replace(
     /^(\s*)\/\/ \[PRO\] (.+)$/gm,
-    '$1// [PRO MODULE] $2 — requiere licencia PRO: https://create-saas-ar.dev',
+    '$1// [PRO MODULE] $2 — requiere licencia PRO: https://ar-saas.dev',
   )
 }
 
@@ -281,6 +281,6 @@ function printNextSteps(config: ProjectConfig): void {
   }
 
   console.log()
-  console.log(chalk.gray('  Documentación: https://create-saas-ar.dev/docs'))
+  console.log(chalk.gray('  Documentación: https://ar-saas.dev/docs'))
   console.log()
 }
