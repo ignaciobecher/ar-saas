@@ -1,6 +1,10 @@
 # ar-saas
 
 <p align="center">
+  <img src="assets/logo.png" alt="ar-saas" width="200" />
+</p>
+
+<p align="center">
   <strong>Generador de proyectos SaaS multi-tenant para startups argentinas</strong><br/>
   Backend NestJS + Frontend Next.js listos para producción en minutos.
 </p>
