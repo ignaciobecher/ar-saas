@@ -10,6 +10,8 @@ export interface ProjectConfig {
   stack: 'backend-frontend' | 'backend' | 'frontend'
   modules: string[]
   deployTarget: 'railway' | 'flyio' | 'docker' | 'later'
+  mongoMode?: 'docker' | 'remote'
+  mongoUri?: string
 }
 
 export async function runCli(defaultName?: string): Promise<ProjectConfig> {
@@ -96,6 +98,27 @@ export async function runCli(defaultName?: string): Promise<ProjectConfig> {
         { name: 'Docker', value: 'docker' },
         { name: 'Después', value: 'later' },
       ],
+    },
+    {
+      type: 'list',
+      name: 'mongoMode',
+      message: '¿Dónde va a estar tu base de datos MongoDB?',
+      when: (answers: Partial<ProjectConfig>) =>
+        answers.stack === 'backend' || answers.stack === 'backend-frontend',
+      choices: [
+        { name: 'Local con Docker (recomendado para desarrollo)', value: 'docker' },
+        { name: 'URL remota (MongoDB Atlas u otro)', value: 'remote' },
+      ],
+    },
+    {
+      type: 'input',
+      name: 'mongoUri',
+      message: 'Ingresá la URI de MongoDB:',
+      when: (answers: Partial<ProjectConfig>) => answers.mongoMode === 'remote',
+      validate: (input: string) =>
+        input.startsWith('mongodb://') || input.startsWith('mongodb+srv://')
+          ? true
+          : 'La URI debe comenzar con mongodb:// o mongodb+srv://',
     },
   ])
 

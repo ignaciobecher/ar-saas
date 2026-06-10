@@ -1,8 +1,10 @@
 import path from 'path'
 import fs from 'fs'
+import { exec } from 'child_process'
 import fse from 'fs-extra'
 import chalk from 'chalk'
 import ora from 'ora'
+import type { Ora } from 'ora'
 import type { ProjectConfig } from './cli'
 
 const TEMPLATES_DIR = path.join(__dirname, '..', 'templates')
@@ -67,14 +69,31 @@ export async function generate(config: ProjectConfig): Promise<void> {
   spinner.text = 'Generando configuración de deploy...'
   generateDeployConfig(projectDir, config)
 
+  spinner.text = 'Generando entorno de desarrollo...'
+  generateDevConfig(projectDir, config)
+
   spinner.text = 'Configurando variables de entorno...'
   setupEnvFiles(projectDir, config)
+
+  let dockerStarted = false
+  if (hasBackend) {
+    if (config.mongoMode === 'remote' && config.mongoUri) {
+      patchMongoUri(projectDir, config.mongoUri)
+    } else {
+      const dockerAvailable = await detectDocker()
+      if (dockerAvailable) {
+        dockerStarted = await startDockerMongo(projectDir, config, spinner)
+      } else {
+        printNoDockerWarning()
+      }
+    }
+  }
 
   spinner.succeed(chalk.green(`Proyecto ${chalk.bold(config.projectName)} creado`))
   console.log()
   console.log(chalk.cyan(`  Sitio: ${chalk.bold(config.siteTitle)}`))
   console.log(chalk.gray(`  "${config.siteTagline}"`))
-  printNextSteps(config)
+  printNextSteps(config, dockerStarted)
 }
 
 function processDir(dir: string, config: ProjectConfig): void {
@@ -148,6 +167,37 @@ function generateDeployConfig(projectDir: string, config: ProjectConfig): void {
       'utf-8',
     )
   }
+}
+
+function generateDevConfig(projectDir: string, config: ProjectConfig): void {
+  const hasBackend = config.stack === 'backend' || config.stack === 'backend-frontend'
+  if (!hasBackend) return
+
+  fs.writeFileSync(
+    path.join(projectDir, 'docker-compose.dev.yml'),
+    buildDockerComposeDev(config),
+    'utf-8',
+  )
+}
+
+function buildDockerComposeDev(config: ProjectConfig): string {
+  return `# Base de datos local para desarrollo
+# Levantá con: docker compose -f docker-compose.dev.yml up -d
+# Para usar una BD remota (ej. MongoDB Atlas), cambiá MONGODB_URI en backend/.env
+
+services:
+  mongodb:
+    image: mongo:7
+    container_name: ${config.projectName}-mongo-dev
+    ports:
+      - "27017:27017"
+    volumes:
+      - ${config.projectName}_mongo_dev:/data/db
+    restart: unless-stopped
+
+volumes:
+  ${config.projectName}_mongo_dev:
+`
 }
 
 function buildDockerCompose(config: ProjectConfig): string {
@@ -239,6 +289,14 @@ function setupEnvFiles(projectDir: string, config: ProjectConfig): void {
     if (fs.existsSync(example) && !fs.existsSync(dest)) {
       fse.copySync(example, dest)
     }
+    // Set default local URI; will be overwritten by patchMongoUri if remote mode
+    if (fs.existsSync(dest)) {
+      let envContent = fs.readFileSync(dest, 'utf-8')
+      if (!envContent.includes('MONGODB_URI')) {
+        envContent += `\n# MongoDB local (docker compose -f docker-compose.dev.yml up -d)\n# Para usar Atlas u otra BD remota, reemplazá esta URI\nMONGODB_URI=mongodb://localhost:27017/${config.projectName}\n`
+        fs.writeFileSync(dest, envContent, 'utf-8')
+      }
+    }
   }
 
   if (hasFrontend) {
@@ -250,7 +308,54 @@ function setupEnvFiles(projectDir: string, config: ProjectConfig): void {
   }
 }
 
-function printNextSteps(config: ProjectConfig): void {
+function patchMongoUri(projectDir: string, uri: string): void {
+  const envPath = path.join(projectDir, 'backend', '.env')
+  if (!fs.existsSync(envPath)) return
+  let content = fs.readFileSync(envPath, 'utf-8')
+  content = content.replace(/^MONGODB_URI=.*$/m, `MONGODB_URI=${uri}`)
+  if (!content.includes('MONGODB_URI')) {
+    content += `\nMONGODB_URI=${uri}\n`
+  }
+  fs.writeFileSync(envPath, content, 'utf-8')
+}
+
+async function detectDocker(): Promise<boolean> {
+  return new Promise((resolve) => {
+    exec('docker --version', (err) => resolve(!err))
+  })
+}
+
+async function startDockerMongo(projectDir: string, config: ProjectConfig, spinner: Ora): Promise<boolean> {
+  spinner.text = 'Levantando MongoDB local con Docker...'
+  return new Promise((resolve) => {
+    exec(
+      'docker compose -f docker-compose.dev.yml up -d',
+      { cwd: projectDir },
+      (err, _stdout, stderr) => {
+        if (err) {
+          spinner.warn(chalk.yellow('No se pudo levantar MongoDB automáticamente'))
+          console.log(chalk.gray(`  Podés levantarlo manualmente: cd ${config.projectName} && docker compose -f docker-compose.dev.yml up -d`))
+          if (stderr) console.log(chalk.gray(`  Error: ${stderr.trim()}`))
+          resolve(false)
+        } else {
+          resolve(true)
+        }
+      },
+    )
+  })
+}
+
+function printNoDockerWarning(): void {
+  console.log()
+  console.log(chalk.yellow('  ⚠ Docker no está instalado o no está corriendo.'))
+  console.log(chalk.gray('  Opciones para la base de datos:'))
+  console.log(chalk.gray('  1. Instalá Docker Desktop → https://docs.docker.com/get-docker/'))
+  console.log(chalk.gray('     Luego: docker compose -f docker-compose.dev.yml up -d'))
+  console.log(chalk.gray('  2. Usá MongoDB Atlas (gratis) → https://www.mongodb.com/atlas'))
+  console.log(chalk.gray('     Y editá MONGODB_URI en backend/.env'))
+}
+
+function printNextSteps(config: ProjectConfig, dockerStarted: boolean): void {
   const hasBackend = config.stack === 'backend' || config.stack === 'backend-frontend'
   const hasFrontend = config.stack === 'frontend' || config.stack === 'backend-frontend'
 
@@ -259,6 +364,21 @@ function printNextSteps(config: ProjectConfig): void {
 
   if (hasBackend) {
     console.log()
+    if (config.mongoMode === 'remote') {
+      console.log(chalk.bold.white('  1. Base de datos:'))
+      console.log(chalk.green(`  ✔ MONGODB_URI configurada en backend/.env`))
+      console.log(chalk.gray('  # Verificá que la URI sea correcta antes de iniciar'))
+    } else if (dockerStarted) {
+      console.log(chalk.bold.white('  1. Base de datos:'))
+      console.log(chalk.green('  ✔ MongoDB local levantado con Docker'))
+    } else {
+      console.log(chalk.bold.white('  1. Levantá la base de datos:'))
+      console.log(chalk.cyan(`  cd ${config.projectName}`))
+      console.log(chalk.cyan('  docker compose -f docker-compose.dev.yml up -d'))
+      console.log(chalk.gray('  # O configurá una URL remota en backend/.env'))
+    }
+    console.log()
+    console.log(chalk.bold.white('  2. Iniciá el backend:'))
     console.log(chalk.cyan(`  cd ${config.projectName}/backend`))
     console.log(chalk.gray('  # Completar las variables en .env'))
     console.log(chalk.cyan('  npm install'))
@@ -267,6 +387,7 @@ function printNextSteps(config: ProjectConfig): void {
 
   if (hasFrontend) {
     console.log()
+    console.log(chalk.bold.white(`  ${hasBackend ? '3' : '1'}. Iniciá el frontend:`))
     console.log(chalk.cyan(`  cd ${config.projectName}/frontend`))
     console.log(chalk.gray('  # Completar .env.local con la URL del backend'))
     console.log(chalk.gray('  # Personalizar contenido en src/config/site.ts'))

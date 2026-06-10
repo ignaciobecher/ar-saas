@@ -8,8 +8,8 @@ const CLI_ROOT = path.join(__dirname, '..')
 const TEMPLATES_DIR = path.join(CLI_ROOT, 'templates')
 const PROJECTS_ROOT = path.resolve(CLI_ROOT, '..')
 
-const BACKEND_SRC = path.join(PROJECTS_ROOT, 'saas-generator')
-const FRONTEND_SRC = path.join(PROJECTS_ROOT, 'create-saas-ar-frontend')
+const BACKEND_SRC = path.join(PROJECTS_ROOT, 'ar-saas-templates', 'create-saas-backend')
+const FRONTEND_SRC = path.join(PROJECTS_ROOT, 'ar-saas-templates', 'create-saas-ar-frontend')
 
 const EXCLUDE = new Set([
   'node_modules',

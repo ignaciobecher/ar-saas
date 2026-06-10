@@ -68,7 +68,8 @@ mi-proyecto/
 │   ├── .env.local                    # Copiado de .env.local.example automáticamente
 │   └── package.json
 │
-└── railway.toml / fly.toml / docker-compose.yml
+├── docker-compose.dev.yml            # MongoDB local para desarrollo (Docker opcional)
+└── railway.toml / fly.toml / docker-compose.yml   # Config de deploy según target elegido
 ```
 
 ---
@@ -171,13 +172,13 @@ Editás ese archivo una sola vez y toda la app (landing, footer, páginas legale
 
 ## Configuración
 
-Al ejecutar el CLI se copian automáticamente los archivos `.env.example` → `.env`.
+Al ejecutar el CLI se copian automáticamente los archivos `.env.example` → `.env` y se precarga `MONGODB_URI` apuntando a la base de datos Docker local. Si preferís usar MongoDB Atlas u otra BD remota, reemplazá ese valor antes de iniciar el backend.
 
 ### Backend — variables requeridas
 
 | Variable | Descripción |
 |---|---|
-| `MONGODB_URI` | URI de conexión a MongoDB |
+| `MONGODB_URI` | URI de MongoDB — local (`mongodb://localhost:27017/proyecto`) o remota (Atlas, Railway, etc.) |
 | `JWT_ACCESS_SECRET` | Secreto para access tokens (`openssl rand -hex 64`) |
 | `JWT_REFRESH_SECRET` | Secreto para refresh tokens (distinto al anterior) |
 | `RESEND_API_KEY` | API Key de [Resend](https://resend.com) |
@@ -230,24 +231,47 @@ docker compose up
 
 ## Iniciar el proyecto generado
 
+### 1. Base de datos
+
+El CLI genera un `docker-compose.dev.yml` con MongoDB listo para desarrollo local. **Docker es opcional** — podés usar cualquier MongoDB (Atlas, Railway, etc.) cambiando `MONGODB_URI` en `backend/.env`.
+
+**Opción A — Docker local (sin cuenta externa)**
 ```bash
-# Backend
+cd mi-proyecto
+docker compose -f docker-compose.dev.yml up -d
+# MongoDB corriendo en mongodb://localhost:27017/mi-proyecto
+```
+
+**Opción B — MongoDB Atlas u otra BD remota**
+```bash
+# Editá backend/.env y reemplazá MONGODB_URI:
+MONGODB_URI=mongodb+srv://usuario:contraseña@cluster.mongodb.net/mi-proyecto
+```
+
+### 2. Backend
+
+```bash
 cd mi-proyecto/backend
 npm install
+# Completar variables en .env (JWT secrets, Resend, GitHub OAuth, etc.)
 npm run start:dev
 # → http://localhost:3000
 # → Swagger: http://localhost:3000/api/docs
+```
 
-# Frontend (en otra terminal)
+### 3. Frontend
+
+```bash
 cd mi-proyecto/frontend
 npm install
+# Completar .env.local con NEXT_PUBLIC_API_URL=http://localhost:3000
 npm run dev
 # → http://localhost:3001 (landing page)
 # → http://localhost:3001/login
 # → http://localhost:3001/dashboard
 ```
 
-La landing page aparece directo en `/`. El primer setup del backend se hace desde la pantalla de onboarding.
+La landing page aparece directo en `/`. El primer setup del workspace se hace desde la pantalla de onboarding `/setup`.
 
 ---
 
@@ -272,7 +296,7 @@ Los tokens JWT viajan **únicamente en cookies HttpOnly**. Nunca en `localStorag
 ## Requisitos
 
 - **Node.js** 18+
-- **MongoDB** local o [Atlas](https://www.mongodb.com/atlas) (free tier disponible)
+- **MongoDB** — Docker (incluido) o [Atlas](https://www.mongodb.com/atlas) (free tier disponible)
 - Cuenta en [Resend](https://resend.com) para emails (free tier: 100 emails/día)
 
 ---
