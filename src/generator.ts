@@ -218,8 +218,6 @@ function buildDockerCompose(config: ProjectConfig): string {
 
   mongodb:
     image: mongo:7
-    ports:
-      - "27017:27017"
     volumes:
       - mongodb_data:/data/db
     restart: unless-stopped`)
@@ -239,9 +237,7 @@ function buildDockerCompose(config: ProjectConfig): string {
 
   const volumes = hasBackend ? '\nvolumes:\n  mongodb_data:' : ''
 
-  return `version: '3.8'
-
-services:
+  return `services:
 ${services.join('\n\n')}
 ${volumes}
 `
@@ -253,7 +249,7 @@ builder = "nixpacks"
 
 [deploy]
 startCommand = "npm run start:prod"
-healthcheckPath = "/api/health"
+healthcheckPath = "/api"
 healthcheckTimeout = 30
 restartPolicyType = "on_failure"
 `
