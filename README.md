@@ -11,7 +11,6 @@
 
 <p align="center">
   <a href="https://www.npmjs.com/package/ar-saas"><img src="https://img.shields.io/npm/v/ar-saas.svg" alt="npm version" /></a>
-  <a href="https://www.npmjs.com/package/ar-saas"><img src="https://img.shields.io/npm/dm/ar-saas.svg" alt="npm downloads" /></a>
   <a href="https://github.com/ignaciobecher/ar-saas/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="license" /></a>
   <img src="https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen" alt="node version" />
 </p>
