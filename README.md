@@ -197,7 +197,33 @@ Los tokens JWT viajan **únicamente en cookies HttpOnly**. Nunca en `localStorag
 
 ## Licencia
 
-MIT — el código generado es completamente tuyo, sin restricciones de uso comercial.
+MIT © 2026 [Ignacio Becher](https://github.com/ignaciobecher)
+
+El código generado por esta herramienta es completamente tuyo, sin restricciones de uso comercial. Podés usarlo, modificarlo y distribuirlo libremente.
+
+---
+
+## Legal
+
+**Propiedad del código generado**
+
+Todo el código que `ar-saas` genera en tu proyecto te pertenece a vos. No reclamamos ningún derecho sobre el código generado ni sobre los productos que construyas con él.
+
+**Sin garantías**
+
+Esta herramienta se provee "tal cual" (*as is*), sin garantías de ningún tipo. No nos hacemos responsables por:
+
+- Vulnerabilidades de seguridad en el código generado si modificás la configuración por defecto
+- Daños directos o indirectos derivados del uso del software
+- Pérdida de datos o interrupciones de servicio en proyectos construidos con esta herramienta
+
+**Dependencias de terceros**
+
+El código generado incluye dependencias de terceros (NestJS, Next.js, MongoDB, etc.), cada una con su propia licencia. Es tu responsabilidad revisar y cumplir con los términos de cada dependencia en tu proyecto.
+
+**Seguridad**
+
+Si encontrás una vulnerabilidad de seguridad en esta herramienta, por favor reportala abriendo un issue en el [repositorio de GitHub](https://github.com/ignaciobecher/ar-saas) en lugar de hacerlo público. Intentaremos resolverlo a la brevedad.
 
 ---
 
