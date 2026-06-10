@@ -18,7 +18,6 @@ const TEXT_EXTENSIONS = new Set([
   'Dockerfile', 'Makefile', 'Procfile',
 ])
 const SKIP_DIRS = new Set(['.git', 'node_modules', 'dist', '.next', '.turbo', 'build'])
-const PRO_MODULES = new Set(['auth-advanced', 'notifications', 'invoices', 'crm', 'mercadopago'])
 
 export async function generate(config: ProjectConfig): Promise<void> {
   const projectDir = path.join(process.cwd(), config.projectName)
@@ -36,7 +35,6 @@ export async function generate(config: ProjectConfig): Promise<void> {
 
   const hasBackend = config.stack === 'backend' || config.stack === 'backend-frontend'
   const hasFrontend = config.stack === 'frontend' || config.stack === 'backend-frontend'
-  const hasValidPro = [...config.modules].some((m) => PRO_MODULES.has(m))
 
   if (hasBackend) {
     spinner.text = 'Copiando backend...'
@@ -48,7 +46,7 @@ export async function generate(config: ProjectConfig): Promise<void> {
       fs.mkdirSync(dest, { recursive: true })
     } else {
       await fse.copy(src, dest)
-      processDir(dest, config, hasValidPro)
+      processDir(dest, config)
     }
   }
 
@@ -62,7 +60,7 @@ export async function generate(config: ProjectConfig): Promise<void> {
       fs.mkdirSync(dest, { recursive: true })
     } else {
       await fse.copy(src, dest)
-      processDir(dest, config, hasValidPro)
+      processDir(dest, config)
     }
   }
 
@@ -76,12 +74,11 @@ export async function generate(config: ProjectConfig): Promise<void> {
   printNextSteps(config)
 }
 
-function processDir(dir: string, config: ProjectConfig, hasValidPro: boolean): void {
+function processDir(dir: string, config: ProjectConfig): void {
   for (const file of collectTextFiles(dir)) {
     try {
       let content = fs.readFileSync(file, 'utf-8')
       content = applyNameReplacements(content, config.projectName)
-      content = applyProModuleHandling(content, hasValidPro)
       fs.writeFileSync(file, content, 'utf-8')
     } catch {
       // skip unreadable or binary files
@@ -112,21 +109,9 @@ function collectTextFiles(dir: string): string[] {
 
 function applyNameReplacements(content: string, projectName: string): string {
   return content
-    .replace(/create-saas-ar-backend/g, `${projectName}-backend`)
-    .replace(/create-saas-ar-frontend/g, `${projectName}-frontend`)
-    .replace(/create-saas-ar/g, projectName)
-}
-
-function applyProModuleHandling(content: string, hasValidPro: boolean): string {
-  if (hasValidPro) {
-    // Uncomment PRO code: remove the "// [PRO] " prefix
-    return content.replace(/^(\s*)\/\/ \[PRO\] /gm, '$1')
-  }
-  // Add explanatory placeholder for PRO lines
-  return content.replace(
-    /^(\s*)\/\/ \[PRO\] (.+)$/gm,
-    '$1// [PRO MODULE] $2 — requiere licencia PRO: https://ar-saas.dev',
-  )
+    .replace(/ar-saas-backend/g, `${projectName}-backend`)
+    .replace(/ar-saas-frontend/g, `${projectName}-frontend`)
+    .replace(/ar-saas/g, projectName)
 }
 
 function generateDeployConfig(projectDir: string, config: ProjectConfig): void {

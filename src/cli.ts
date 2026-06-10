@@ -8,25 +8,16 @@ export interface ProjectConfig {
   deployTarget: 'railway' | 'flyio' | 'docker' | 'later'
 }
 
-const ALWAYS_INCLUDED = ['auth', 'multi-tenancy', 'mail']
-
-interface RawAnswers {
-  projectName: string
-  stack: 'backend-frontend' | 'backend' | 'frontend'
-  modules: string[]
-  deployTarget: 'railway' | 'flyio' | 'docker' | 'later'
-}
-
-export async function runCli(): Promise<ProjectConfig> {
+export async function runCli(defaultName?: string): Promise<ProjectConfig> {
   console.log(chalk.bold('\n  ar-saas'))
   console.log(chalk.gray('  Backend NestJS + Frontend Next.js listos para producción\n'))
 
-  const answers = await inquirer.prompt<RawAnswers>([
+  const answers = await inquirer.prompt<ProjectConfig>([
     {
       type: 'input',
       name: 'projectName',
       message: 'Nombre del proyecto:',
-      default: 'my-saas',
+      default: defaultName ?? 'my-saas',
       validate: (input: string) => {
         if (!/^[a-z0-9][a-z0-9-]{1,}$/.test(input)) {
           return 'Solo letras minúsculas, números y guiones (mínimo 2 caracteres)'
@@ -49,14 +40,10 @@ export async function runCli(): Promise<ProjectConfig> {
       name: 'modules',
       message: 'Módulos adicionales:',
       choices: [
-        { name: 'OAuth GitHub/Google + 2FA', value: 'auth-advanced' },
         { name: 'Notificaciones + Push Web', value: 'notifications' },
         { name: 'Invoices + Quotes + PDF', value: 'invoices' },
         { name: 'CRM + Kanban', value: 'crm' },
-        { name: 'MercadoPago suscripciones', value: 'mercadopago' },
       ],
-      filter: (selected: string[]) =>
-        Array.from(new Set([...ALWAYS_INCLUDED, ...selected])),
     },
     {
       type: 'list',
@@ -71,10 +58,5 @@ export async function runCli(): Promise<ProjectConfig> {
     },
   ])
 
-  return {
-    projectName: answers.projectName,
-    stack: answers.stack,
-    modules: answers.modules,
-    deployTarget: answers.deployTarget,
-  }
+  return answers
 }
