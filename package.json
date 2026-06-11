@@ -1,6 +1,6 @@
 {
   "name": "ar-saas",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "Generador de proyectos SaaS multi-tenant para startups argentinas. Landing page, auth, dashboard y legal listos para producción.",
   "main": "dist/index.js",
   "bin": {
@@ -50,4 +50,5 @@
     "typescript": "^5.4.0"
   }
 }
+
 
