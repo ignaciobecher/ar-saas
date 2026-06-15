@@ -146,7 +146,7 @@ export default function SetupPage() {
   }
 
   const handleSkip = () => {
-    router.push('/login')
+    router.push('/landing')
   }
 
   return (
