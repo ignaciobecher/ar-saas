@@ -23,7 +23,7 @@ export class User {
   @Prop({ type: String, default: null, index: true, sparse: true })
   githubId!: string | null;
 
-  @Prop({ required: true })
+  @Prop({ type: String, default: '' })
   workspaceId!: string;
 
   @Prop({ default: false })

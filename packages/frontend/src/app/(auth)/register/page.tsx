@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { useAuth } from '@/lib/hooks/use-auth'
 import { Button } from '@/components/ui/button'
@@ -21,6 +22,7 @@ interface RegisterForm {
 
 export default function RegisterPage() {
   const { register } = useAuth()
+  const router = useRouter()
   const [success, setSuccess] = useState(false)
   const [apiError, setApiError] = useState('')
 
@@ -31,8 +33,12 @@ export default function RegisterPage() {
   async function onSubmit(data: RegisterForm) {
     setApiError('')
     try {
-      await register(data.name, data.email, data.password)
-      setSuccess(true)
+      const result = await register(data.name, data.email, data.password)
+      if (result.emailVerified) {
+        router.push('/login?registered=true')
+      } else {
+        setSuccess(true)
+      }
     } catch (err: unknown) {
       const msg =
         err instanceof Error

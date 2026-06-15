@@ -174,27 +174,45 @@ Editás ese archivo una sola vez y toda la app (landing, footer, páginas legale
 
 Al ejecutar el CLI se copian automáticamente los archivos `.env.example` → `.env` y se precarga `MONGODB_URI` apuntando a la base de datos Docker local. Si preferís usar MongoDB Atlas u otra BD remota, reemplazá ese valor antes de iniciar el backend.
 
-### Backend — variables requeridas
+### Mínimo para arrancar
+
+Solo 4 variables son necesarias para tener el sistema funcionando con registro, login y dashboard completo:
 
 | Variable | Descripción |
 |---|---|
-| `MONGODB_URI` | URI de MongoDB — local (`mongodb://localhost:27017/proyecto`) o remota (Atlas, Railway, etc.) |
+| `MONGODB_URI` | URI de MongoDB — local (`mongodb://localhost:27017/proyecto`) o remota |
 | `JWT_ACCESS_SECRET` | Secreto para access tokens (`openssl rand -hex 64`) |
 | `JWT_REFRESH_SECRET` | Secreto para refresh tokens (distinto al anterior) |
-| `RESEND_API_KEY` | API Key de [Resend](https://resend.com) |
-| `RESEND_FROM_EMAIL` | Email remitente verificado en Resend |
-| `APP_URL` | URL del frontend (para links en emails) |
-| `CORS_ORIGINS` | URL del frontend separada por comas |
-| `FRONTEND_URL` | URL del frontend para redirecciones OAuth |
-| `GITHUB_CLIENT_ID` | Client ID de tu GitHub OAuth App |
-| `GITHUB_CLIENT_SECRET` | Client Secret de tu GitHub OAuth App |
-| `GITHUB_CALLBACK_URL` | Callback URL registrada en GitHub |
+| `CORS_ORIGINS` | URL del frontend: `http://localhost:3000` |
 
-### Frontend — variables requeridas
+Y en el frontend:
 
 | Variable | Descripción |
 |---|---|
-| `NEXT_PUBLIC_API_URL` | URL base del backend (ej: `http://localhost:3000`) |
+| `NEXT_PUBLIC_API_URL` | URL base del backend (ej: `http://localhost:3001`) |
+
+> **Sin Resend configurado**: el registro auto-verifica el email y el usuario puede loguearse directamente. No se envía ningún email. Perfecto para desarrollo y demos.
+
+### Funcionalidades que requieren configuración adicional
+
+| Funcionalidad | Variables necesarias | Cómo configurar |
+|---|---|---|
+| **Verificación de email** y **reset de contraseña** | `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `APP_URL` | Crear cuenta gratis en [resend.com](https://resend.com) |
+| **Login con GitHub** | `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `GITHUB_CALLBACK_URL`, `FRONTEND_URL` | Crear OAuth App en [github.com/settings/applications/new](https://github.com/settings/applications/new) |
+
+#### Configurar emails con Resend
+
+1. Crear cuenta gratis en [resend.com](https://resend.com) (3 000 emails/mes gratis)
+2. Ir a **API Keys** → "Create API Key" → copiar la key → `RESEND_API_KEY`
+3. Para dev: usar el dominio sandbox de Resend (solo envía a tu propio email)
+4. Para producción: agregar y verificar tu dominio en "Domains" → `RESEND_FROM_EMAIL`
+
+#### Configurar GitHub OAuth
+
+1. Ir a [github.com/settings/applications/new](https://github.com/settings/applications/new)
+2. **Authorization callback URL**: `http://localhost:3001/api/auth/github/callback`
+3. Copiar **Client ID** → `GITHUB_CLIENT_ID`
+4. Generar **Client Secret** → `GITHUB_CLIENT_SECRET`
 
 ---
 
@@ -253,10 +271,12 @@ MONGODB_URI=mongodb+srv://usuario:contraseña@cluster.mongodb.net/mi-proyecto
 ```bash
 cd mi-proyecto/backend
 npm install
-# Completar variables en .env (JWT secrets, Resend, GitHub OAuth, etc.)
+# Mínimo obligatorio: JWT_ACCESS_SECRET, JWT_REFRESH_SECRET, CORS_ORIGINS
+# Opcional para emails: RESEND_API_KEY, RESEND_FROM_EMAIL, APP_URL
+# Opcional para GitHub OAuth: GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, etc.
 npm run start:dev
-# → http://localhost:3000
-# → Swagger: http://localhost:3000/api/docs
+# → http://localhost:3001
+# → Swagger: http://localhost:3001/api/docs
 ```
 
 ### 3. Frontend
@@ -297,7 +317,7 @@ Los tokens JWT viajan **únicamente en cookies HttpOnly**. Nunca en `localStorag
 
 - **Node.js** 18+
 - **MongoDB** — Docker (incluido) o [Atlas](https://www.mongodb.com/atlas) (free tier disponible)
-- Cuenta en [Resend](https://resend.com) para emails (free tier: 100 emails/día)
+- **Resend** *(opcional)* — solo si querés emails de verificación y reset de contraseña. Sin configurarlo, el registro funciona igual: el email se auto-verifica y el usuario puede loguearse directo.
 
 ---
 

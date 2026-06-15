@@ -8,7 +8,7 @@ import type { AuthState, User } from '@/types/auth'
 interface AuthContextValue extends AuthState {
   login: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
-  register: (name: string, email: string, password: string) => Promise<{ message: string }>
+  register: (name: string, email: string, password: string) => Promise<{ message: string; emailVerified?: boolean }>
   refreshUser: () => Promise<void>
 }
 

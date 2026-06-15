@@ -20,9 +20,17 @@ const BACKEND_REQUIRED = [
     desc: 'Secreto para firmar refresh tokens. Usar un valor distinto al anterior.',
   },
   {
+    key: 'CORS_ORIGINS',
+    example: 'http://localhost:3000',
+    desc: 'URL del frontend separada por coma. Necesaria para que el browser pueda comunicarse con el backend.',
+  },
+]
+
+const BACKEND_EMAIL = [
+  {
     key: 'RESEND_API_KEY',
     example: 're_xxxxxxxxxxxxxxxx',
-    desc: 'API Key de Resend para enviar emails. Crear cuenta en resend.com.',
+    desc: 'API Key de Resend. Sin esta variable el registro funciona igual pero sin email de verificación.',
   },
   {
     key: 'RESEND_FROM_EMAIL',
@@ -32,12 +40,30 @@ const BACKEND_REQUIRED = [
   {
     key: 'APP_URL',
     example: 'http://localhost:3000',
-    desc: 'URL del frontend. Se usa en los links de los emails de verificación y reset.',
+    desc: 'URL del frontend. Se usa para generar los links en los emails de verificación y reset.',
+  },
+]
+
+const BACKEND_GITHUB = [
+  {
+    key: 'GITHUB_CLIENT_ID',
+    example: 'Ov23liXXXXXXXXXXXXXX',
+    desc: 'Client ID de tu GitHub OAuth App.',
   },
   {
-    key: 'CORS_ORIGINS',
+    key: 'GITHUB_CLIENT_SECRET',
+    example: 'abc123...',
+    desc: 'Client Secret de tu GitHub OAuth App.',
+  },
+  {
+    key: 'GITHUB_CALLBACK_URL',
+    example: 'http://localhost:3001/api/auth/github/callback',
+    desc: 'Debe coincidir exactamente con la URL registrada en la GitHub App.',
+  },
+  {
+    key: 'FRONTEND_URL',
     example: 'http://localhost:3000',
-    desc: 'URL del frontend separada por coma. Debe coincidir con APP_URL.',
+    desc: 'URL del frontend. Se usa para redirigir al usuario después del OAuth.',
   },
 ]
 
@@ -209,6 +235,11 @@ docker ps`}</CodeBlock>
             <h2 className="text-lg font-semibold text-zinc-900">Backend — configurar <code className="text-sm bg-zinc-100 px-1.5 py-0.5 rounded">.env</code></h2>
           </div>
 
+          <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-4">
+            <p className="text-xs font-semibold text-green-800 mb-1">Mínimo para arrancar</p>
+            <p className="text-xs text-green-700">Con estas 4 variables tenés registro, login y dashboard completo funcionando. Resend y GitHub OAuth son opcionales — podés agregarlos cuando quieras.</p>
+          </div>
+
           <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden mb-4">
             <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-100">
               <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Variables requeridas</span>
@@ -230,39 +261,6 @@ node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 openssl rand -hex 64`}</CodeBlock>
           </div>
 
-          <details className="bg-white border border-zinc-200 rounded-xl overflow-hidden mb-4">
-            <summary className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-100 cursor-pointer text-xs font-semibold text-zinc-500 uppercase tracking-wider hover:text-zinc-700">
-              Variables opcionales
-            </summary>
-            <div className="px-4">
-              {BACKEND_OPTIONAL.map((v) => (
-                <EnvVar key={v.key} varKey={v.key} example={v.example} desc={v.desc} />
-              ))}
-            </div>
-          </details>
-
-          <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden mb-4">
-            <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-100">
-              <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Configurar Resend (emails)</span>
-            </div>
-            <div className="p-4 space-y-2">
-              <ol className="text-xs text-zinc-600 space-y-1.5 list-none">
-                {[
-                  'Crear cuenta gratis en resend.com (3 000 emails/mes gratis)',
-                  'Ir a API Keys → "Create API Key" → copiar la key',
-                  'Pegar en RESEND_API_KEY del .env',
-                  'Para dev podés usar el dominio sandbox de Resend (solo envía a tu propio email)',
-                  'Para prod: agregar y verificar tu dominio en "Domains"',
-                ].map((step, i) => (
-                  <li key={i} className="flex gap-2">
-                    <span className="shrink-0 w-4 h-4 rounded-full bg-zinc-200 text-zinc-600 flex items-center justify-center font-bold text-[10px]">{i + 1}</span>
-                    {step}
-                  </li>
-                ))}
-              </ol>
-            </div>
-          </div>
-
           <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden">
             <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-100">
               <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Iniciar el backend</span>
@@ -270,7 +268,7 @@ openssl rand -hex 64`}</CodeBlock>
             <div className="p-4 space-y-3">
               <CodeBlock>{`cd backend
 # .env ya fue copiado automáticamente desde .env.example
-# Completar las variables faltantes (JWT secrets, Resend key)
+# Completar JWT_ACCESS_SECRET, JWT_REFRESH_SECRET y CORS_ORIGINS
 npm install
 npm run start:dev`}</CodeBlock>
               <p className="text-xs text-zinc-400">
@@ -279,6 +277,96 @@ npm run start:dev`}</CodeBlock>
               </p>
             </div>
           </div>
+        </section>
+
+        {/* Funcionalidades opcionales */}
+        <section className="mb-8">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-7 h-7 rounded-full bg-zinc-400 text-white text-xs font-bold flex items-center justify-center">+</div>
+            <h2 className="text-lg font-semibold text-zinc-900">Funcionalidades opcionales</h2>
+          </div>
+          <p className="text-sm text-zinc-500 mb-4">Podés agregar estas integraciones cuando lo necesites. No son necesarias para que la app funcione.</p>
+
+          <details className="bg-white border border-zinc-200 rounded-xl overflow-hidden mb-3">
+            <summary className="px-4 py-3 cursor-pointer flex items-center gap-3 hover:bg-zinc-50">
+              <div>
+                <p className="text-sm font-semibold text-zinc-800">Emails transaccionales — Resend</p>
+                <p className="text-xs text-zinc-500">Verificación de email, reset de contraseña, bienvenida</p>
+              </div>
+              <span className="ml-auto text-xs bg-zinc-100 text-zinc-500 px-2 py-0.5 rounded font-mono">opcional</span>
+            </summary>
+            <div className="border-t border-zinc-100">
+              <div className="px-4 py-3 bg-blue-50 border-b border-blue-100">
+                <p className="text-xs text-blue-700">Sin esta configuración, el registro auto-verifica el email y el usuario puede loguearse directamente. No se envía ningún email.</p>
+              </div>
+              <div className="px-4">
+                {BACKEND_EMAIL.map((v) => (
+                  <EnvVar key={v.key} varKey={v.key} example={v.example} desc={v.desc} />
+                ))}
+              </div>
+              <div className="p-4 border-t border-zinc-100 space-y-2">
+                <p className="text-xs font-semibold text-zinc-700">Cómo configurarlo:</p>
+                <ol className="text-xs text-zinc-600 space-y-1.5 list-none">
+                  {[
+                    'Crear cuenta gratis en resend.com (3 000 emails/mes gratis)',
+                    'Ir a API Keys → "Create API Key" → copiar la key → RESEND_API_KEY',
+                    'Para dev podés usar el dominio sandbox (solo envía a tu propio email)',
+                    'Para prod: agregar y verificar tu dominio en "Domains" → RESEND_FROM_EMAIL',
+                  ].map((step, i) => (
+                    <li key={i} className="flex gap-2">
+                      <span className="shrink-0 w-4 h-4 rounded-full bg-zinc-200 text-zinc-600 flex items-center justify-center font-bold text-[10px]">{i + 1}</span>
+                      {step}
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            </div>
+          </details>
+
+          <details className="bg-white border border-zinc-200 rounded-xl overflow-hidden mb-3">
+            <summary className="px-4 py-3 cursor-pointer flex items-center gap-3 hover:bg-zinc-50">
+              <div>
+                <p className="text-sm font-semibold text-zinc-800">Login con GitHub — OAuth</p>
+                <p className="text-xs text-zinc-500">Permite a los usuarios registrarse e ingresar con su cuenta de GitHub</p>
+              </div>
+              <span className="ml-auto text-xs bg-zinc-100 text-zinc-500 px-2 py-0.5 rounded font-mono">opcional</span>
+            </summary>
+            <div className="border-t border-zinc-100">
+              <div className="px-4">
+                {BACKEND_GITHUB.map((v) => (
+                  <EnvVar key={v.key} varKey={v.key} example={v.example} desc={v.desc} />
+                ))}
+              </div>
+              <div className="p-4 border-t border-zinc-100 space-y-2">
+                <p className="text-xs font-semibold text-zinc-700">Cómo configurarlo:</p>
+                <ol className="text-xs text-zinc-600 space-y-1.5 list-none">
+                  {[
+                    'Ir a github.com/settings/applications/new',
+                    'Homepage URL: http://localhost:3000',
+                    'Authorization callback URL: http://localhost:3001/api/auth/github/callback',
+                    'Copiar Client ID → GITHUB_CLIENT_ID',
+                    'Generar Client Secret → GITHUB_CLIENT_SECRET',
+                  ].map((step, i) => (
+                    <li key={i} className="flex gap-2">
+                      <span className="shrink-0 w-4 h-4 rounded-full bg-zinc-200 text-zinc-600 flex items-center justify-center font-bold text-[10px]">{i + 1}</span>
+                      {step}
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            </div>
+          </details>
+
+          <details className="bg-white border border-zinc-200 rounded-xl overflow-hidden">
+            <summary className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-100 cursor-pointer text-xs font-semibold text-zinc-500 uppercase tracking-wider hover:text-zinc-700">
+              Otras variables opcionales
+            </summary>
+            <div className="px-4">
+              {BACKEND_OPTIONAL.map((v) => (
+                <EnvVar key={v.key} varKey={v.key} example={v.example} desc={v.desc} />
+              ))}
+            </div>
+          </details>
         </section>
 
         {/* Frontend */}
@@ -329,8 +417,9 @@ npm run dev`}</CodeBlock>
               { label: 'Backend corre sin errores', hint: 'npm run start:dev no muestra errores rojos. Errores de JWT_SECRET faltante o MONGODB_URI indican variables sin completar.' },
               { label: 'Swagger disponible', hint: 'http://localhost:3001/api/docs carga correctamente y lista los endpoints de auth.' },
               { label: 'MongoDB conectado', hint: 'El log del backend dice "Connected to MongoDB successfully". Si no aparece, verificá MONGODB_URI en backend/.env.' },
-              { label: 'Registro funciona', hint: 'Ir a http://localhost:3000/register y crear una cuenta. Si falla con CORS, verificar que CORS_ORIGINS en backend/.env incluya http://localhost:3000.' },
-              { label: 'Email de verificación llega', hint: 'Revisar spam si no aparece en inbox. Si no llega, verificar RESEND_API_KEY y RESEND_FROM_EMAIL en backend/.env.' },
+              { label: 'Registro funciona', hint: 'Ir a http://localhost:3000/register y crear una cuenta. Sin Resend configurado, se redirige directo al login. Si falla con CORS, verificar que CORS_ORIGINS en backend/.env incluya http://localhost:3000.' },
+              { label: 'Login funciona', hint: 'Podés loguearte inmediatamente después del registro. Sin Resend no hay verificación de email — el usuario queda activo de entrada.' },
+              { label: '(Opcional) Email de verificación llega', hint: 'Solo si configuraste RESEND_API_KEY y RESEND_FROM_EMAIL. Revisar spam si no aparece en inbox.' },
             ].map((item) => (
               <div key={item.label} className="flex items-start gap-3 py-1.5">
                 <div className="w-4 h-4 rounded border-2 border-zinc-300 mt-0.5 shrink-0" />

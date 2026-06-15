@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Eye, EyeOff } from 'lucide-react'
 import { useForm } from 'react-hook-form'
+import { useSearchParams } from 'next/navigation'
 import { useAuth } from '@/lib/hooks/use-auth'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -19,6 +20,8 @@ interface LoginForm {
 
 export default function LoginPage() {
   const { login } = useAuth()
+  const searchParams = useSearchParams()
+  const justRegistered = searchParams.get('registered') === 'true'
   const [showPassword, setShowPassword] = useState(false)
   const [apiError, setApiError] = useState('')
 
@@ -42,7 +45,11 @@ export default function LoginPage() {
     <Card>
       <CardHeader>
         <CardTitle>Iniciar sesión</CardTitle>
-        <CardDescription>Ingresá tu email y contraseña</CardDescription>
+        <CardDescription>
+          {justRegistered
+            ? '¡Cuenta creada! Ya podés ingresar.'
+            : 'Ingresá tu email y contraseña'}
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>

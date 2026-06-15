@@ -3,7 +3,7 @@ import type { User } from '@/types/auth'
 
 export const authApi = {
   register(data: { name: string; email: string; password: string }) {
-    return apiClient.post<never, { message: string }>('/api/auth/register', data)
+    return apiClient.post<never, { message: string; emailVerified?: boolean }>('/api/auth/register', data)
   },
 
   login(data: { email: string; password: string }) {

@@ -42,7 +42,7 @@ export class AuthService {
     private readonly configService: ConfigService,
   ) {}
 
-  async register(dto: RegisterDto): Promise<{ message: string }> {
+  async register(dto: RegisterDto): Promise<{ message: string; emailVerified?: boolean }> {
     const user = await this.usersService.create({
       name: dto.name,
       email: dto.email,
@@ -56,6 +56,11 @@ export class AuthService {
       const workspaceId = String(workspace._id);
 
       await this.usersService.updateWorkspaceId(userId, workspaceId);
+
+      if (!this.mailService.isConfigured) {
+        await this.usersService.markEmailVerified(userId);
+        return { message: 'Registered successfully', emailVerified: true };
+      }
 
       const token = this.generateSecureToken();
       const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);

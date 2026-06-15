@@ -17,20 +17,38 @@ export interface SendMailOptions {
 
 @Injectable()
 export class MailService {
-  private readonly resend: Resend;
+  private readonly resend: Resend | null;
   private readonly logger = new Logger(MailService.name);
   private readonly fromEmail: string;
   private readonly fromName: string;
 
   constructor(private readonly configService: ConfigService) {
-    this.resend = new Resend(
-      this.configService.getOrThrow<string>('RESEND_API_KEY'),
-    );
+    const apiKey = this.configService.get<string>('RESEND_API_KEY');
+    const fromEmail = this.configService.get<string>('RESEND_FROM_EMAIL');
+
+    if (apiKey && fromEmail) {
+      this.resend = new Resend(apiKey);
+      this.fromEmail = fromEmail;
+    } else {
+      this.resend = null;
+      this.fromEmail = '';
+      this.logger.warn(
+        'RESEND_API_KEY o RESEND_FROM_EMAIL no configurados — los emails no se enviarán.',
+      );
+    }
+
     this.fromName = this.configService.get<string>('RESEND_FROM_NAME', 'SaaS AR');
-    this.fromEmail = this.configService.getOrThrow<string>('RESEND_FROM_EMAIL');
+  }
+
+  get isConfigured(): boolean {
+    return this.resend !== null;
   }
 
   async send(options: SendMailOptions): Promise<{ id: string }> {
+    if (!this.resend) {
+      this.logger.warn(`Email a ${options.to} omitido (sin proveedor configurado).`);
+      return { id: '' };
+    }
     try {
       const { data, error } = await this.resend.emails.send({
         from: options.from ?? `${this.fromName} <${this.fromEmail}>`,
