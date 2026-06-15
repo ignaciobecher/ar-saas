@@ -53,7 +53,9 @@ apiClient.interceptors.response.use(
       return apiClient(originalRequest)
     } catch (refreshError) {
       processQueue(refreshError)
-      if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/login')) {
+      const publicPaths = ['/login', '/register', '/setup', '/landing', '/forgot-password', '/reset-password', '/verify-email', '/terms', '/privacy']
+      const isPublic = publicPaths.some((p) => window.location.pathname.startsWith(p))
+      if (typeof window !== 'undefined' && !isPublic) {
         window.location.replace('/login')
       }
       return Promise.reject(refreshError)
