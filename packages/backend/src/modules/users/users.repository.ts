@@ -34,6 +34,10 @@ export class UsersRepository {
     return this.userModel.findById(id).select('+refreshToken').exec();
   }
 
+  async findByIdWithPassword(id: string): Promise<UserDocument | null> {
+    return this.userModel.findById(id).select('+password').exec();
+  }
+
   async findByVerificationToken(tokenHash: string): Promise<UserDocument | null> {
     return this.userModel
       .findOne({ emailVerificationToken: tokenHash })

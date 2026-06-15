@@ -47,7 +47,9 @@ export default function SettingsPage() {
     if (user) {
       profileForm.reset({ name: user.name ?? '', phone: user.phone ?? '' })
     }
-  }, [user, profileForm])
+    // profileForm is stable across renders — intentionally omitted
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user])
 
   useEffect(() => {
     const fetchWorkspace = async () => {
@@ -57,7 +59,9 @@ export default function SettingsPage() {
       } catch { /* workspace may not exist yet */ }
     }
     fetchWorkspace()
-  }, [workspaceForm])
+    // workspaceForm is stable across renders — intentionally omitted
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const onProfileSubmit = async (data: ProfileForm) => {
     try {
@@ -84,14 +88,14 @@ export default function SettingsPage() {
       return
     }
     try {
-      await apiClient.patch('/api/users/me', {
+      await apiClient.patch('/api/users/me/password', {
         currentPassword: data.currentPassword,
         newPassword: data.newPassword,
       })
       passwordForm.reset()
       toast({ title: 'Contraseña actualizada' })
     } catch {
-      toast({ title: 'Error al cambiar contraseña', variant: 'destructive' })
+      toast({ title: 'Error al cambiar contraseña. Verificá la contraseña actual.', variant: 'destructive' })
     }
   }
 

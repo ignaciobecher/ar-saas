@@ -56,8 +56,8 @@ export default function InvoicesPage() {
   const loadKpis = useCallback(async () => {
     try {
       const [inc, exp] = await Promise.all([
-        getInvoices({ type: 'income', limit: 500 }),
-        getInvoices({ type: 'expense', limit: 500 }),
+        getInvoices({ type: 'income', limit: 100 }),
+        getInvoices({ type: 'expense', limit: 100 }),
       ])
       setKpiIncome(inc.data.reduce((s, i) => s + i.total, 0))
       setKpiExpense(exp.data.reduce((s, i) => s + i.total, 0))
@@ -236,10 +236,10 @@ export default function InvoicesPage() {
               </div>
               <FormField control={form.control} name="clientId" render={({ field }) => (
                 <FormItem><FormLabel>Cliente</FormLabel>
-                  <Select value={field.value ?? ''} onValueChange={field.onChange}>
+                  <Select value={field.value || 'none'} onValueChange={v => field.onChange(v === 'none' ? '' : v)}>
                     <FormControl><SelectTrigger><SelectValue placeholder="Sin cliente" /></SelectTrigger></FormControl>
                     <SelectContent>
-                      <SelectItem value="">Sin cliente</SelectItem>
+                      <SelectItem value="none">Sin cliente</SelectItem>
                       {clients.map(c => <SelectItem key={c._id} value={c._id}>{c.name}</SelectItem>)}
                     </SelectContent>
                   </Select></FormItem>

@@ -17,8 +17,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/
 import { useToast } from '@/hooks/use-toast'
 
 const HOUR_HEIGHT = 64
-const START_HOUR = 6
-const END_HOUR = 23
+const START_HOUR = 0
+const END_HOUR = 24
 const HOURS = Array.from({ length: END_HOUR - START_HOUR }, (_, i) => START_HOUR + i)
 
 const STATUS_COLORS: Record<BlockStatus, string> = {
@@ -52,6 +52,47 @@ function dateToString(d: Date) {
 
 function formatDate(dateStr: string) {
   return new Date(dateStr + 'T12:00:00').toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })
+}
+
+// Assign column slots to overlapping blocks so they render side-by-side
+function computeColumns(blocks: PlannerBlock[]): Map<string, { col: number; total: number }> {
+  const result = new Map<string, { col: number; total: number }>()
+  const sorted = [...blocks].sort((a, b) => toMinutes(a.startTime) - toMinutes(b.startTime))
+
+  // Group overlapping blocks into clusters
+  const clusters: PlannerBlock[][] = []
+  for (const block of sorted) {
+    let placed = false
+    for (const cluster of clusters) {
+      const clusterEnd = Math.max(...cluster.map(b => toMinutes(b.endTime)))
+      if (toMinutes(block.startTime) < clusterEnd) {
+        cluster.push(block)
+        placed = true
+        break
+      }
+    }
+    if (!placed) clusters.push([block])
+  }
+
+  for (const cluster of clusters) {
+    // Within each cluster assign a column greedily
+    const cols: number[] = []
+    const colEnds: number[] = []
+    for (const block of cluster) {
+      const start = toMinutes(block.startTime)
+      let assigned = -1
+      for (let i = 0; i < colEnds.length; i++) {
+        if (colEnds[i] <= start) { assigned = i; break }
+      }
+      if (assigned === -1) { assigned = cols.length; colEnds.push(0) }
+      colEnds[assigned] = toMinutes(block.endTime)
+      cols.push(assigned)
+    }
+    const total = colEnds.length
+    cluster.forEach((block, i) => result.set(block._id, { col: cols[i], total }))
+  }
+
+  return result
 }
 
 export default function PlannerPage() {
@@ -150,6 +191,7 @@ export default function PlannerPage() {
   }
 
   const totalHeight = (END_HOUR - START_HOUR) * HOUR_HEIGHT
+  const colLayout = computeColumns(blocks)
 
   return (
     <div className="flex flex-col gap-6 p-6">
@@ -194,33 +236,43 @@ export default function PlannerPage() {
             ))}
 
             {/* Blocks */}
-            {loading ? null : blocks.map(block => (
-              <div
-                key={block._id}
-                data-block
-                className={`absolute left-2 right-2 rounded-lg border p-2 overflow-hidden select-none ${STATUS_COLORS[block.status]}`}
-                style={{ top: blockTop(block.startTime), height: blockHeight(block.startTime, block.endTime) }}
-                onClick={e => { e.stopPropagation(); openEdit(block) }}
-              >
-                <p className="text-xs font-semibold line-clamp-1">{block.title}</p>
-                <p className="text-xs opacity-70">{block.startTime} – {block.endTime}</p>
-                <div className="absolute right-1 top-1 flex gap-0.5" onClick={e => e.stopPropagation()}>
-                  <button
-                    className="rounded px-1 py-0.5 text-xs font-medium hover:bg-black/10"
-                    onClick={() => handleCycleStatus(block)}
-                    title="Cambiar estado"
-                  >
-                    {STATUS_LABELS[block.status].slice(0, 3)}
-                  </button>
-                  <button className="rounded px-1 py-0.5 hover:bg-black/10" onClick={() => handleDuplicate(block)} title="Duplicar">
-                    <Copy className="size-3" />
-                  </button>
-                  <button className="rounded px-1 py-0.5 hover:bg-black/10" onClick={() => setDeleteTarget(block)} title="Eliminar">
-                    <Trash2 className="size-3" />
-                  </button>
+            {loading ? null : blocks.map(block => {
+              const layout = colLayout.get(block._id) ?? { col: 0, total: 1 }
+              const widthPct = 100 / layout.total
+              const leftPct = widthPct * layout.col
+              return (
+                <div
+                  key={block._id}
+                  data-block
+                  className={`absolute rounded-lg border p-2 overflow-hidden select-none ${STATUS_COLORS[block.status]}`}
+                  style={{
+                    top: blockTop(block.startTime),
+                    height: blockHeight(block.startTime, block.endTime),
+                    left: `calc(${leftPct}% + 4px)`,
+                    width: `calc(${widthPct}% - 8px)`,
+                  }}
+                  onClick={e => { e.stopPropagation(); openEdit(block) }}
+                >
+                  <p className="text-xs font-semibold line-clamp-1">{block.title}</p>
+                  <p className="text-xs opacity-70">{block.startTime} – {block.endTime}</p>
+                  <div className="absolute right-1 top-1 flex gap-0.5" onClick={e => e.stopPropagation()}>
+                    <button
+                      className="rounded px-1 py-0.5 text-xs font-medium hover:bg-black/10"
+                      onClick={() => handleCycleStatus(block)}
+                      title="Cambiar estado"
+                    >
+                      {STATUS_LABELS[block.status].slice(0, 3)}
+                    </button>
+                    <button className="rounded px-1 py-0.5 hover:bg-black/10" onClick={() => handleDuplicate(block)} title="Duplicar">
+                      <Copy className="size-3" />
+                    </button>
+                    <button className="rounded px-1 py-0.5 hover:bg-black/10" onClick={() => setDeleteTarget(block)} title="Eliminar">
+                      <Trash2 className="size-3" />
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       </div>

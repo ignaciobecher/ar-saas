@@ -6,8 +6,6 @@ import {
   LayoutDashboard,
   User,
   Settings,
-  CreditCard,
-  Users,
   LogOut,
   Building2,
   FileText,
@@ -32,8 +30,6 @@ const navItems = [
   { label: 'Planner', href: '/planner', icon: CalendarDays },
   { label: 'Notificaciones', href: '/notifications', icon: Bell, badge: true },
   { label: 'Perfil', href: '/profile', icon: User },
-  { label: 'Equipo', href: '/team', icon: Users },
-  { label: 'Facturación', href: '/billing', icon: CreditCard },
   { label: 'Ajustes', href: '/settings', icon: Settings },
 ]
 

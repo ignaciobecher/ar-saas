@@ -61,6 +61,10 @@ export class UsersService {
     return this.usersRepository.findById(id);
   }
 
+  async findByIdWithPassword(id: string): Promise<UserDocument | null> {
+    return this.usersRepository.findByIdWithPassword(id);
+  }
+
   async updateRefreshToken(
     userId: string,
     refreshToken: string | null,

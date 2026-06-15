@@ -42,7 +42,7 @@ export default function PipelinePage() {
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const [d, c] = await Promise.all([getDeals({ limit: 200 }), getClients({ limit: 100 })])
+      const [d, c] = await Promise.all([getDeals({ limit: 100 }), getClients({ limit: 100 })])
       setDeals(d.data)
       setClients(c.data)
     } catch { toast({ title: 'Error al cargar', variant: 'destructive' }) }
@@ -191,10 +191,10 @@ export default function PipelinePage() {
               )} />
               <FormField control={form.control} name="clientId" render={({ field }) => (
                 <FormItem><FormLabel>Cliente</FormLabel>
-                  <Select value={field.value ?? ''} onValueChange={field.onChange}>
+                  <Select value={field.value || 'none'} onValueChange={v => field.onChange(v === 'none' ? '' : v)}>
                     <FormControl><SelectTrigger><SelectValue placeholder="Sin cliente" /></SelectTrigger></FormControl>
                     <SelectContent>
-                      <SelectItem value="">Sin cliente</SelectItem>
+                      <SelectItem value="none">Sin cliente</SelectItem>
                       {clients.map(c => <SelectItem key={c._id} value={c._id}>{c.name}</SelectItem>)}
                     </SelectContent>
                   </Select></FormItem>

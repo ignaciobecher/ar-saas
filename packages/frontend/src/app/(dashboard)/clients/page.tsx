@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Building2, Pencil, Trash2, Plus } from 'lucide-react'
 import { createClient, deleteClient, getClients, updateClient } from '@/lib/api/clients'
@@ -28,8 +28,6 @@ export default function ClientsPage() {
   const [sheetOpen, setSheetOpen] = useState(false)
   const [editing, setEditing] = useState<Client | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Client | null>(null)
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
   const form = useForm<CreateClientDto>({
     defaultValues: { name: '', email: '', phone: '', address: '', notes: '', status: 'active' },
   })
@@ -49,22 +47,16 @@ export default function ClientsPage() {
 
   useEffect(() => {
     load({ search: search || undefined, status: statusFilter !== 'all' ? (statusFilter as 'active' | 'archived') : undefined, page, limit: PAGE_SIZE })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [load, page])
+  }, [load, search, statusFilter, page])
 
   const handleSearch = (value: string) => {
     setSearch(value)
     setPage(1)
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => {
-      load({ search: value || undefined, status: statusFilter !== 'all' ? (statusFilter as 'active' | 'archived') : undefined, page: 1, limit: PAGE_SIZE })
-    }, 300)
   }
 
   const handleStatusFilter = (value: string) => {
     setStatusFilter(value)
     setPage(1)
-    load({ search: search || undefined, status: value !== 'all' ? (value as 'active' | 'archived') : undefined, page: 1, limit: PAGE_SIZE })
   }
 
   const openCreate = () => {

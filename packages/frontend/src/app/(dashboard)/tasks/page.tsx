@@ -62,11 +62,10 @@ export default function TasksPage() {
   const handleAddColumn = async () => {
     if (!newColName.trim()) return
     try {
-      const col = await createColumn({ name: newColName.trim(), order: columns.length })
-      setColumns(prev => [...prev, col])
-      setTasksByColumn(prev => ({ ...prev, [col._id]: [] }))
+      await createColumn({ name: newColName.trim(), order: columns.length })
       setNewColName('')
       setAddingCol(false)
+      await load()
     } catch { toast({ title: 'Error al crear columna', variant: 'destructive' }) }
   }
 
@@ -275,8 +274,8 @@ export default function TasksPage() {
               )} />
               <FormField control={form.control} name="columnId" render={({ field }) => (
                 <FormItem><FormLabel>Columna</FormLabel>
-                  <Select value={field.value ?? ''} onValueChange={field.onChange}>
-                    <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                  <Select value={field.value || undefined} onValueChange={field.onChange}>
+                    <FormControl><SelectTrigger><SelectValue placeholder="Seleccionar columna" /></SelectTrigger></FormControl>
                     <SelectContent>{columns.map(c => <SelectItem key={c._id} value={c._id}>{c.name}</SelectItem>)}</SelectContent>
                   </Select></FormItem>
               )} />
