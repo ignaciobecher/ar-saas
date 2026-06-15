@@ -4,3 +4,13 @@ templates/backend/
 templates/frontend/
 *.tgz
 .env
+
+# packages — ignorar artefactos generados, no el código fuente
+packages/*/node_modules/
+packages/*/dist/
+packages/*/.next/
+packages/*/build/
+packages/*/coverage/
+packages/*/.turbo/
+packages/*/.vercel/
+packages/frontend/next-env.d.ts
