@@ -26,9 +26,12 @@ export class MailService {
     const apiKey = this.configService.get<string>('RESEND_API_KEY');
     const fromEmail = this.configService.get<string>('RESEND_FROM_EMAIL');
 
-    if (apiKey && fromEmail) {
-      this.resend = new Resend(apiKey);
-      this.fromEmail = fromEmail;
+    const isRealKey = apiKey && !apiKey.includes('cambiar') && apiKey.startsWith('re_') && apiKey.length > 10;
+    const isRealEmail = fromEmail && !fromEmail.includes('cambiar') && fromEmail.includes('@');
+
+    if (isRealKey && isRealEmail) {
+      this.resend = new Resend(apiKey!);
+      this.fromEmail = fromEmail!;
     } else {
       this.resend = null;
       this.fromEmail = '';
